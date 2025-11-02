@@ -53,6 +53,16 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         .card {
           margin-bottom: 20px;
         }
+        .actions {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+          margin-top: 10px;
+        }
+        .count {
+          margin-left: 8px;
+          color: #ffd699;
+        }
       `,
     ];
   }
@@ -73,10 +83,24 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
+  // Not like a photo and save to localStorage
+  dislike(id) {
+    const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
+    dislikes[id] = (dislikes[id] || 0) + 1;
+    localStorage.setItem("dislikes", JSON.stringify(dislikes));
+    this.requestUpdate();
+  }
+
   // Get the like count
   getLikes(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     return likes[id] || 0;
+  }
+
+  // Get the dislike count
+  getDislikes(id) {
+    const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
+    return dislikes[id] || 0;
   }
 
   render() {
@@ -91,9 +115,14 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           <div class="card">
             <img src="${p.photo}" alt="${p.author}" />
             <p>${p.author}</p>
-            <button @click="${() => this.like(p.id)}">
-               ${this.getLikes(p.id)}
-            </button>
+            <div class="actions">
+              <button @click="${() => this.like(p.id)}">
+                Like <span class="count">${this.getLikes(p.id)}</span>
+              </button>
+              <button @click="${() => this.dislike(p.id)}">
+                Disike <span class="count">${this.getDislikes(p.id)}</span>
+              </button>
+            </div>
           </div>
         `
       )}
