@@ -60,7 +60,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
   // Fetch data from our API
   async loadGallery() {
     this.loading = true;
-    const res = await fetch("/api/gallery");
+    const res = await fetch("https://project-1-eight-steel.vercel.app/api/gallery");
     this.photos = await res.json();
     this.loading = false;
   }
