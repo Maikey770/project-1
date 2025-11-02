@@ -1,132 +1,104 @@
-/**
- * Copyright 2025 Maikey770
- * @license Apache-2.0, see LICENSE for full text.
- */
+// Simple gallery that loads photos from api
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
-/**
- * random-fox-gallery component
- */
 export class RandomFoxGallery extends DDDSuper(LitElement) {
-
-  // Define custom element tag
   static get tag() {
     return "random-fox-gallery";
   }
 
-  // Reactive properties
   static get properties() {
     return {
-      foxes: { type: Array },   // store fox image data
-      loading: { type: Boolean } // show loading state
+      photos: { type: Array },
+      loading: { type: Boolean },
     };
   }
 
-  // Constructor: set defaults
   constructor() {
     super();
-    this.foxes = [];
+    this.photos = [];
     this.loading = false;
   }
 
-  // Component styles
   static get styles() {
     return [
       super.styles,
       css`
         :host {
           display: block;
-          background-color: var(--ddd-theme-default-surface);
-          color: var(--ddd-theme-default-on-surface);
-          border-radius: 16px;
-          padding: 16px;
-          max-width: 900px;
-          margin: 20px auto;
-        }
-        h2 {
+          background: #1e1e1e;
+          color: white;
+          padding: 20px;
+          border-radius: 12px;
           text-align: center;
-          font-size: 1.4rem;
-          margin-bottom: 12px;
+          max-width: 700px;
+          margin: 40px auto;
+        }
+        img {
+          width: 100%;
+          border-radius: 10px;
         }
         button {
-          display: block;
-          margin: 0 auto 16px;
-          padding: 8px 16px;
+          background: #ff8c1a;
+          color: white;
           border: none;
           border-radius: 8px;
-          background-color: var(--ddd-theme-primary);
-          color: white;
+          padding: 8px 14px;
           cursor: pointer;
-          font-size: 1rem;
+          margin: 10px;
         }
         button:hover {
           opacity: 0.9;
         }
-        .gallery {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 12px;
-        }
         .card {
-          background: var(--ddd-theme-default-card);
-          border-radius: 12px;
-          overflow: hidden;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          transition: transform 0.2s;
-        }
-        .card:hover {
-          transform: scale(1.03);
-        }
-        img {
-          width: 100%;
-          height: 200px;
-          object-fit: cover;
-        }
-        .link {
-          display: block;
-          text-align: center;
-          font-size: 0.9rem;
-          padding: 6px;
-          color: var(--ddd-theme-primary);
+          margin-bottom: 20px;
         }
       `,
     ];
   }
 
-  // Fetch one random fox image from API
-  async getFox() {
+  // Fetch data from our API
+  async loadGallery() {
     this.loading = true;
-    try {
-      const res = await fetch("https://randomfox.ca/floof/");
-      const data = await res.json();
-      this.foxes = [...this.foxes, data]; // add new fox to array
-    } catch (e) {
-      console.error("Error fetching fox:", e);
-    } finally {
-      this.loading = false; // reset loading state
-    }
+    const res = await fetch("/api/gallery");
+    this.photos = await res.json();
+    this.loading = false;
   }
 
-  // Render component UI
+  // Like a photo and save to localStorage
+  like(id) {
+    const likes = JSON.parse(localStorage.getItem("likes") || "{}");
+    likes[id] = (likes[id] || 0) + 1;
+    localStorage.setItem("likes", JSON.stringify(likes));
+    this.requestUpdate();
+  }
+
+  // Get the like count
+  getLikes(id) {
+    const likes = JSON.parse(localStorage.getItem("likes") || "{}");
+    return likes[id] || 0;
+  }
+
   render() {
     return html`
-      <h2>Random Fox Gallery</h2>
-      <button @click="${this.getFox}">
-        ${this.loading ? "Loading..." : "Get a New Fox"}
+      <h2>Fox Gallery</h2>
+      <button @click="${this.loadGallery}">
+        ${this.loading ? "Loading..." : "Load Gallery"}
       </button>
-      <div class="gallery">
-        ${this.foxes.map(
-          (f) => html`
-            <div class="card">
-              <img src="${f.image}" alt="fox" />
-              <a class="link" href="${f.link}" target="_blank">View Source</a>
-            </div>
-          `
-        )}
-      </div>
+
+      ${this.photos.map(
+        (p) => html`
+          <div class="card">
+            <img src="${p.photo}" alt="${p.author}" />
+            <p>${p.author}</p>
+            <button @click="${() => this.like(p.id)}">
+               ${this.getLikes(p.id)}
+            </button>
+          </div>
+        `
+      )}
     `;
   }
 }
 
-globalThis.customElements.define(RandomFoxGallery.tag, RandomFoxGallery);
+customElements.define(RandomFoxGallery.tag, RandomFoxGallery);
