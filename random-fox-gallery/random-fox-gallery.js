@@ -35,9 +35,11 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           margin: 40px auto;
         }
         img {
-          width: 100%;
-          border-radius: 10px;
+         width: 85%;
+        max-width: 500px;
+        border-radius: 10px;
         }
+
         button {
           background: #ff8c1a;
           color: white;
