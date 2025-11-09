@@ -49,10 +49,10 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           text-align: center;
           font-size: 2rem;
           margin-bottom: 16px;
-          margin-top: -10px; /* Move title upward */
-          color: #ffcc00; /* Gold color */
-          letter-spacing: 1px;
-          text-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+          margin-top: 0; /* restore original position */
+          color: inherit; /* restore default text color */
+          letter-spacing: normal;
+          text-shadow: none; /* remove glow */
         }
 
         .btn-row {
