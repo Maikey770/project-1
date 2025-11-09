@@ -1,4 +1,4 @@
-// RandomFoxGallery Web Component with Lazy Loading and Theme Toggle
+// RandomFoxGallery Web Component with Lazy Loading, Theme Toggle, and Interaction Buttons
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
@@ -60,8 +60,8 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         }
 
         button {
-          padding: 8px 16px;
-          font-size: 1rem;
+          padding: 8px 14px;
+          font-size: 0.9rem;
           cursor: pointer;
           border: none;
           border-radius: 6px;
@@ -88,6 +88,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           color: #111;
           text-align: center;
           transition: transform 0.2s;
+          padding-bottom: 10px;
         }
 
         :host([darkmode]) .card {
@@ -122,13 +123,37 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
 
         .author img {
           width: 28px;
           height: 28px;
           border-radius: 50%;
+        }
+
+        .interaction {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 8px;
+        }
+
+        .interaction button {
+          background-color: #ff8c1a;
+          border: none;
+          border-radius: 6px;
+          padding: 6px 10px;
+          color: white;
+          cursor: pointer;
+          font-size: 0.8rem;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .interaction button:hover {
+          background-color: #e67e00;
         }
       `,
     ];
@@ -140,8 +165,6 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     try {
       const res = await fetch("/api/gallery");
       this.photos = await res.json();
-
-      // 等待渲染完成后再绑定懒加载监听器
       await this.updateComplete;
       this.setupLazyLoading();
     } catch (err) {
@@ -168,7 +191,6 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
       },
       { threshold: 0.2 }
     );
-
     const lazyImages = this.renderRoot.querySelectorAll("img.lazy");
     lazyImages.forEach((img) => observer.observe(img));
   }
@@ -181,6 +203,37 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     } else {
       this.removeAttribute("darkmode");
     }
+  }
+
+  // ✅ Like / Dislike / Share
+  like(id) {
+    const likes = JSON.parse(localStorage.getItem("likes") || "{}");
+    likes[id] = (likes[id] || 0) + 1;
+    localStorage.setItem("likes", JSON.stringify(likes));
+    this.requestUpdate();
+  }
+
+  dislike(id) {
+    const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
+    dislikes[id] = (dislikes[id] || 0) + 1;
+    localStorage.setItem("dislikes", JSON.stringify(dislikes));
+    this.requestUpdate();
+  }
+
+  share(url) {
+    navigator.clipboard.writeText(url).then(() => {
+      alert("Image link copied!");
+    });
+  }
+
+  getLikes(id) {
+    const likes = JSON.parse(localStorage.getItem("likes") || "{}");
+    return likes[id] || 0;
+  }
+
+  getDislikes(id) {
+    const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
+    return dislikes[id] || 0;
   }
 
   render() {
@@ -211,6 +264,16 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
               </div>
               <p>${p.name}</p>
               <small>Taken on ${p.dateTaken}</small>
+
+              <div class="interaction">
+                <button @click="${() => this.like(p.id)}">
+                  👍 Like ${this.getLikes(p.id)}
+                </button>
+                <button @click="${() => this.dislike(p.id)}">
+                  👎 Dislike ${this.getDislikes(p.id)}
+                </button>
+                <button @click="${() => this.share(p.thumbSrc)}">🔗 Share</button>
+              </div>
             </div>
           `
         )}
