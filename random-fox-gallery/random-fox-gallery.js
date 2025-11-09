@@ -1,4 +1,4 @@
-// Simple static gallery with lazy loading
+// Simple gallery that loads photos from API
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
@@ -9,19 +9,17 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
   static get properties() {
     return {
-      allPhotos: { type: Array },
-      photosToDisplay: { type: Array },
-      batchSize: { type: Number },
-      loadedCount: { type: Number },
+      photos: { type: Array },
+      loading: { type: Boolean },
+      darkMode: { type: Boolean },
     };
   }
 
   constructor() {
     super();
-    this.allPhotos = [];
-    this.photosToDisplay = [];
-    this.batchSize = 10; // 每次加载 10 张
-    this.loadedCount = 0;
+    this.photos = [];
+    this.loading = false;
+    this.darkMode = true;
   }
 
   static get styles() {
@@ -30,82 +28,78 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
       css`
         :host {
           display: block;
+          padding: 20px;
+          border-radius: 12px;
           text-align: center;
-        }
-
-        .gallery {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 12px;
-        }
-
-        img {
-          width: 220px;
-          height: 160px;
-          object-fit: cover;
-          border-radius: 8px;
-          border: 2px solid #ff8c1a;
-          box-shadow: 0 0 6px rgba(255, 140, 26, 0.4);
+          max-width: 700px;
+          margin: 0 auto;
+          background-color: var(--ddd-theme-default-sky, #222);
+          color: var(--ddd-theme-default-skytext, #fff);
+          box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
         }
 
         button {
-          margin-top: 20px;
           background-color: #ff8c1a;
           color: white;
           border: none;
           border-radius: 6px;
           padding: 8px 16px;
           cursor: pointer;
+          margin-top: 20px;
         }
 
         button:hover {
           opacity: 0.9;
         }
+
+        img {
+          width: 100%;
+          max-height: 400px;
+          object-fit: cover;
+          border-radius: 10px;
+          box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+          margin-bottom: 15px;
+        }
+
+        .loading {
+          font-size: 1.2rem;
+          color: #ff8c1a;
+          margin-top: 10px;
+        }
       `,
     ];
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.loadPhotos();
+  // 初次加载时自动拉取一张随机狐狸图片
+  firstUpdated() {
+    this.loadRandomFox();
   }
 
-  async loadPhotos() {
+  async loadRandomFox() {
+    this.loading = true;
     try {
-      const res = await fetch("./data/photos.json");
+      // 调用随机狐狸 API
+      const res = await fetch("https://randomfox.ca/floof/");
       const data = await res.json();
-      this.allPhotos = data;
-      this.loadMore();
+      this.photos = [data.image];
     } catch (err) {
-      console.error("Failed to load photos:", err);
+      console.error("Error loading fox image:", err);
+    } finally {
+      this.loading = false;
     }
-  }
-
-  loadMore() {
-    const nextCount = this.loadedCount + this.batchSize;
-    this.photosToDisplay = this.allPhotos.slice(0, nextCount);
-    this.loadedCount = nextCount;
   }
 
   render() {
     return html`
-      <div class="gallery">
-        ${this.photosToDisplay.map(
-          (photo) => html`
-            <img
-              src=${photo.thumbSrc}
-              alt=${photo.name}
-              loading="lazy"
-              title=${photo.name}
-            />
-          `
-        )}
-      </div>
-
-      ${this.loadedCount < this.allPhotos.length
-        ? html`<button @click=${this.loadMore}>Load More</button>`
-        : html`<p>All photos loaded ✅</p>`}
+      <h2>Random Fox Gallery 🦊</h2>
+      ${this.loading
+        ? html`<div class="loading">Loading...</div>`
+        : html`
+            ${this.photos.map(
+              (src) => html`<img src=${src} alt="Random Fox" />`
+            )}
+            <button @click=${this.loadRandomFox}>Load Another Fox</button>
+          `}
     `;
   }
 }
