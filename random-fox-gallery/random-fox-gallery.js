@@ -47,8 +47,12 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         h2 {
           text-align: center;
-          font-size: 1.8rem;
+          font-size: 2rem;
           margin-bottom: 16px;
+          margin-top: -10px; /* Move title upward */
+          color: #ffcc00; /* Gold color */
+          letter-spacing: 1px;
+          text-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
         }
 
         .btn-row {
@@ -64,13 +68,13 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           cursor: pointer;
           border: none;
           border-radius: 6px;
-          background-color: var(--ddd-theme-primary, #0078d7);
+          background-color: var(--ddd-theme-primary, #ff8c1a);
           color: white;
           transition: 0.3s;
         }
 
         button:hover {
-          background-color: var(--ddd-theme-primary-hover, #005ea6);
+          background-color: var(--ddd-theme-primary-hover, #e67e00);
         }
 
         .gallery {
@@ -196,7 +200,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
               <img data-src="${p.thumbSrc}" alt="${p.name}" class="lazy" />
               <div class="author">
                 <img src="${p.author.avatar}" alt="${p.author.name}" />
-                <span>@${p.author.channel}</span>
+                <span>${p.author.channel}</span>
               </div>
               <p>${p.name}</p>
               <small>Taken on ${p.dateTaken}</small>
