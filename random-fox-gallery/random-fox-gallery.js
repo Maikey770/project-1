@@ -11,7 +11,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     return {
       photos: { type: Array },
       loading: { type: Boolean },
-      darkMode: { type: Boolean }, // light/dark mode toggle
+      theme: { type: String },
     };
   }
 
@@ -19,7 +19,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     super();
     this.photos = [];
     this.loading = false;
-    this.darkMode = true; // default mode
+    this.theme = "dark";
   }
 
   static get styles() {
@@ -37,51 +37,59 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           margin: 40px auto;
           transition: background 0.3s, color 0.3s;
         }
+
         img {
           width: 100%;
           border-radius: 10px;
         }
+
         button {
-          background: var(--accent-color, #ff8c1a);
           color: white;
           border: none;
           border-radius: 8px;
           padding: 8px 14px;
           cursor: pointer;
-          margin: 10px;
+          margin: 6px;
         }
+
         button:hover {
           opacity: 0.9;
         }
+
         .card {
           margin-bottom: 20px;
+          background: var(--card-bg, #2a2a2a);
+          border-radius: 10px;
+          padding: 10px;
         }
-        .controls {
+
+        .btn-row {
           display: flex;
-          justify-content: center;
-          gap: 10px;
-          flex-wrap: wrap;
+          justify-content: space-around;
+          margin-top: 10px;
+        }
+
+        .top-buttons {
+          text-align: center;
+          margin-bottom: 20px;
         }
       `,
     ];
   }
 
-  // Fetch data from the API
+  // Load gallery photos
   async loadGallery() {
     this.loading = true;
     try {
       const res = await fetch("/api/gallery");
-      if (!res.ok) throw new Error("Failed to fetch");
       this.photos = await res.json();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load gallery. Please try again later.");
-    } finally {
-      this.loading = false;
+    } catch (e) {
+      console.error("Error loading gallery:", e);
     }
+    this.loading = false;
   }
 
-  // Like a photo and save to localStorage
+  // Like photo
   like(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     likes[id] = (likes[id] || 0) + 1;
@@ -89,7 +97,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  // Dislike a photo and save to localStorage
+  // Dislike photo
   dislike(id) {
     const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
     dislikes[id] = (dislikes[id] || 0) + 1;
@@ -109,39 +117,47 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     return dislikes[id] || 0;
   }
 
-  // Toggle light/dark mode
-  toggleMode() {
-    this.darkMode = !this.darkMode;
-    if (this.darkMode) {
-      document.documentElement.style.setProperty("--bg-color", "#1e1e1e");
-      document.documentElement.style.setProperty("--text-color", "white");
-      document.documentElement.style.setProperty("--accent-color", "#ff8c1a");
-    } else {
+  // Toggle dark / light mode
+  toggleTheme() {
+    if (this.theme === "dark") {
+      this.theme = "light";
       document.documentElement.style.setProperty("--bg-color", "#f5f5f5");
-      document.documentElement.style.setProperty("--text-color", "#1e1e1e");
-      document.documentElement.style.setProperty("--accent-color", "#0078d7");
+      document.documentElement.style.setProperty("--text-color", "#000");
+      document.documentElement.style.setProperty("--card-bg", "#ffffff");
+      document.documentElement.style.setProperty("--button-bg", "#007bff"); // blue
+    } else {
+      this.theme = "dark";
+      document.documentElement.style.setProperty("--bg-color", "#1e1e1e");
+      document.documentElement.style.setProperty("--text-color", "#fff");
+      document.documentElement.style.setProperty("--card-bg", "#2a2a2a");
+      document.documentElement.style.setProperty("--button-bg", "#ff8c1a"); // orange
     }
+    this.requestUpdate();
   }
 
-  // Copy current page URL to clipboard
-  shareLink() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      alert("Link copied to clipboard.");
-    });
+  // Share this specific photo URL
+  sharePhoto(photoUrl) {
+    navigator.clipboard.writeText(photoUrl);
+    alert("Image link copied to clipboard!");
   }
 
   render() {
     return html`
       <h2>Fox Gallery</h2>
-      <div class="controls">
-        <button @click="${this.loadGallery}">
+
+      <div class="top-buttons">
+        <button
+          style="background-color: var(--button-bg, #ff8c1a)"
+          @click="${this.loadGallery}"
+        >
           ${this.loading ? "Loading..." : "Load Gallery"}
         </button>
-        <button @click="${this.toggleMode}">
-          ${this.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        <button
+          style="background-color: var(--button-bg, #ff8c1a)"
+          @click="${this.toggleTheme}"
+        >
+          Switch to ${this.theme === "dark" ? "Light" : "Dark"} Mode
         </button>
-        <button @click="${this.shareLink}">Share</button>
       </div>
 
       ${this.photos.map(
@@ -149,12 +165,24 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           <div class="card">
             <img src="${p.photo}" alt="${p.author}" />
             <p>${p.author}</p>
-            <div class="controls">
-              <button @click="${() => this.like(p.id)}">
+            <div class="btn-row">
+              <button
+                style="background-color: var(--button-bg, #ff8c1a)"
+                @click="${() => this.like(p.id)}"
+              >
                 Like ${this.getLikes(p.id)}
               </button>
-              <button @click="${() => this.dislike(p.id)}">
+              <button
+                style="background-color: var(--button-bg, #ff8c1a)"
+                @click="${() => this.dislike(p.id)}"
+              >
                 Dislike ${this.getDislikes(p.id)}
+              </button>
+              <button
+                style="background-color: var(--button-bg, #ff8c1a)"
+                @click="${() => this.sharePhoto(p.photo)}"
+              >
+                Share
               </button>
             </div>
           </div>
