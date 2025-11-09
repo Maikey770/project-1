@@ -76,7 +76,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         .gallery {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 16px;
         }
 
@@ -120,16 +120,27 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         .author {
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 8px;
+          gap: 6px;
           margin-bottom: 10px;
         }
 
         .author img {
-          width: 28px;
-          height: 28px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
+        }
+
+        .author-name {
+          font-weight: 600;
+          font-size: 0.95rem;
+        }
+
+        .author-channel {
+          font-size: 0.85rem;
+          color: gray;
         }
 
         .interaction {
@@ -260,10 +271,13 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
                 class="lazy"
                 loading="lazy"
               />
+
               <div class="author">
                 <img src="${p.author.avatar}" alt="${p.author.name}" />
-                <span>${p.author.channel}</span>
+                <span class="author-name">Author: ${p.author.name}</span>
+                <span class="author-channel">${p.author.channel}</span>
               </div>
+
               <p>${p.name}</p>
               <small>Taken on ${p.dateTaken}</small>
 
@@ -285,4 +299,3 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 }
 
 customElements.define(RandomFoxGallery.tag, RandomFoxGallery);
-
