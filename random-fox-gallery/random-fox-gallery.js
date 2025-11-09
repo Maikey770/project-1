@@ -10,6 +10,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
   static get properties() {
     return {
       photos: { type: Array },
+      visibleCount: { type: Number },
       loading: { type: Boolean },
       darkMode: { type: Boolean },
     };
@@ -18,6 +19,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
   constructor() {
     super();
     this.photos = [];
+    this.visibleCount = 10; // only show 10 at first
     this.loading = false;
     this.darkMode = true;
   }
@@ -31,7 +33,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           padding: 20px;
           border-radius: 12px;
           text-align: center;
-          max-width: 700px;
+          max-width: 1000px;
           margin: 40px auto;
           transition: background-color 0.3s, color 0.3s;
         }
@@ -44,6 +46,13 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         :host(:not([dark-mode])) {
           background-color: #f4f4f4;
           color: #333;
+        }
+
+        .gallery {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 20px;
+          margin-top: 20px;
         }
 
         img {
@@ -81,10 +90,10 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         }
 
         .card {
-          margin-bottom: 20px;
           border-radius: 12px;
           overflow: hidden;
           box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+          padding: 10px;
         }
 
         h2 {
@@ -98,10 +107,9 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
   async loadGallery() {
     try {
       this.loading = true;
-      const res = await fetch(
-        "https://project-1-eight-steel.vercel.app/api/gallery"
-      );
-      this.photos = await res.json();
+      const res = await fetch("https://project-1-eight-steel.vercel.app/api/gallery");
+      const data = await res.json();
+      this.photos = data;
     } catch (e) {
       console.error("Failed to load gallery", e);
     } finally {
@@ -109,7 +117,11 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     }
   }
 
-  // Like a photo
+  loadMore() {
+    this.visibleCount += 10;
+  }
+
+  // Like / Dislike
   like(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     likes[id] = (likes[id] || 0) + 1;
@@ -117,7 +129,6 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  // Dislike a photo
   dislike(id) {
     const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
     dislikes[id] = (dislikes[id] || 0) + 1;
@@ -125,7 +136,6 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  // Get counts
   getLikes(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     return likes[id] || 0;
@@ -136,14 +146,12 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     return dislikes[id] || 0;
   }
 
-  // Share photo link
   sharePhoto(photoUrl) {
     navigator.clipboard.writeText(photoUrl).then(() => {
-      alert("Photo link copied to clipboard!");
+      alert("Photo link copied!");
     });
   }
 
-  // Toggle light/dark mode
   toggleMode() {
     this.darkMode = !this.darkMode;
     if (this.darkMode) {
@@ -167,23 +175,31 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         </button>
       </div>
 
-      ${this.photos.map(
-        (p) => html`
-          <div class="card">
-            <img src="${p.photo}" alt="${p.author}" />
-            <p>${p.author}</p>
-            <div class="btn-row">
-              <button @click="${() => this.like(p.id)}">
-                V_V ${this.getLikes(p.id)}
-              </button>
-              <button @click="${() => this.dislike(p.id)}">
-                Dislike ${this.getDislikes(p.id)}
-              </button>
-              <button @click="${() => this.sharePhoto(p.photo)}">Share</button>
+      <div class="gallery">
+        ${this.photos.slice(0, this.visibleCount).map(
+          (p) => html`
+            <div class="card">
+              <img src="${p.photo}" alt="${p.author}" loading="lazy" />
+              <p>${p.author}</p>
+              <div class="btn-row">
+                <button @click="${() => this.like(p.id)}">
+                  Like ${this.getLikes(p.id)}
+                </button>
+                <button @click="${() => this.dislike(p.id)}">
+                  Dislike ${this.getDislikes(p.id)}
+                </button>
+                <button @click="${() => this.sharePhoto(p.photo)}">Share</button>
+              </div>
             </div>
-          </div>
-        `
-      )}
+          `
+        )}
+      </div>
+
+      ${this.visibleCount < this.photos.length
+        ? html`<div class="btn-row">
+            <button @click="${this.loadMore}">Load More</button>
+          </div>`
+        : ""}
     `;
   }
 }
