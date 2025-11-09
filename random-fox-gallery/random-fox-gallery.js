@@ -118,22 +118,28 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
   }
 
   // Toggle dark / light mode
-  toggleTheme() {
-    if (this.theme === "dark") {
-      this.theme = "light";
-      document.documentElement.style.setProperty("--bg-color", "#f5f5f5");
-      document.documentElement.style.setProperty("--text-color", "#000");
-      document.documentElement.style.setProperty("--card-bg", "#ffffff");
-      document.documentElement.style.setProperty("--button-bg", "#007bff"); // blue
-    } else {
-      this.theme = "dark";
-      document.documentElement.style.setProperty("--bg-color", "#1e1e1e");
-      document.documentElement.style.setProperty("--text-color", "#fff");
-      document.documentElement.style.setProperty("--card-bg", "#2a2a2a");
-      document.documentElement.style.setProperty("--button-bg", "#ff8c1a"); // orange
-    }
-    this.requestUpdate();
+// Toggle dark / light mode
+toggleTheme() {
+  if (this.theme === "dark") {
+    this.theme = "light";
+    // light mode colors
+    document.documentElement.style.setProperty("--bg-color", "#f5f5f5");
+    document.documentElement.style.setProperty("--text-color", "#000");
+    document.documentElement.style.setProperty("--card-bg", "#ffffff");
+    document.documentElement.style.setProperty("--button-bg", "#007bff"); // blue
+    document.body.style.backgroundColor = "#f5f5f5"; // ensure background updates
+  } else {
+    this.theme = "dark";
+    // dark mode colors
+    document.documentElement.style.setProperty("--bg-color", "#1e1e1e");
+    document.documentElement.style.setProperty("--text-color", "#fff");
+    document.documentElement.style.setProperty("--card-bg", "#2a2a2a");
+    document.documentElement.style.setProperty("--button-bg", "#ff8c1a"); // orange
+    document.body.style.backgroundColor = "#1e1e1e"; // ensure background updates
   }
+  this.requestUpdate();
+}
+
 
   // Share this specific photo URL
   sharePhoto(photoUrl) {
