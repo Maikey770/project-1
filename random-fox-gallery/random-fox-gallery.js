@@ -35,7 +35,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           text-align: center;
           max-width: 700px;
           margin: 40px auto;
-          transition: background 0.3s, color 0.3s;
+          transition: background 0.5s ease, color 0.5s ease;
         }
 
         img {
@@ -50,6 +50,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           padding: 8px 14px;
           cursor: pointer;
           margin: 6px;
+          transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         button:hover {
@@ -67,6 +68,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           display: flex;
           justify-content: space-around;
           margin-top: 10px;
+          flex-wrap: wrap;
         }
 
         .top-buttons {
@@ -105,41 +107,51 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  // Get like count
+  // Super Like (V_V)
+  superLike(id) {
+    const superLikes = JSON.parse(localStorage.getItem("superLikes") || "{}");
+    superLikes[id] = (superLikes[id] || 0) + 1;
+    localStorage.setItem("superLikes", JSON.stringify(superLikes));
+    this.requestUpdate();
+  }
+
+  // Get counts
   getLikes(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     return likes[id] || 0;
   }
 
-  // Get dislike count
   getDislikes(id) {
     const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
     return dislikes[id] || 0;
   }
 
-  // Toggle dark / light mode
-// Toggle dark / light mode
-toggleTheme() {
-  if (this.theme === "dark") {
-    this.theme = "light";
-    // light mode colors
-    document.documentElement.style.setProperty("--bg-color", "#f5f5f5");
-    document.documentElement.style.setProperty("--text-color", "#000");
-    document.documentElement.style.setProperty("--card-bg", "#ffffff");
-    document.documentElement.style.setProperty("--button-bg", "#007bff"); // blue
-    document.body.style.backgroundColor = "#f5f5f5"; // ensure background updates
-  } else {
-    this.theme = "dark";
-    // dark mode colors
-    document.documentElement.style.setProperty("--bg-color", "#1e1e1e");
-    document.documentElement.style.setProperty("--text-color", "#fff");
-    document.documentElement.style.setProperty("--card-bg", "#2a2a2a");
-    document.documentElement.style.setProperty("--button-bg", "#ff8c1a"); // orange
-    document.body.style.backgroundColor = "#1e1e1e"; // ensure background updates
+  getSuperLikes(id) {
+    const superLikes = JSON.parse(localStorage.getItem("superLikes") || "{}");
+    return superLikes[id] || 0;
   }
-  this.requestUpdate();
-}
 
+  // Toggle dark / light mode
+  toggleTheme() {
+    if (this.theme === "dark") {
+      this.theme = "light";
+      document.documentElement.style.setProperty("--bg-color", "#ffffff");
+      document.documentElement.style.setProperty("--text-color", "#000");
+      document.documentElement.style.setProperty("--card-bg", "#f8f8f8");
+      document.documentElement.style.setProperty("--button-bg", "#007bff");
+      document.body.style.backgroundColor = "#ffffff";
+      document.querySelector("html").style.backgroundColor = "#ffffff";
+    } else {
+      this.theme = "dark";
+      document.documentElement.style.setProperty("--bg-color", "#121212");
+      document.documentElement.style.setProperty("--text-color", "#fff");
+      document.documentElement.style.setProperty("--card-bg", "#1e1e1e");
+      document.documentElement.style.setProperty("--button-bg", "#ff8c1a");
+      document.body.style.backgroundColor = "#121212";
+      document.querySelector("html").style.backgroundColor = "#121212";
+    }
+    this.requestUpdate();
+  }
 
   // Share this specific photo URL
   sharePhoto(photoUrl) {
@@ -172,6 +184,12 @@ toggleTheme() {
             <img src="${p.photo}" alt="${p.author}" />
             <p>${p.author}</p>
             <div class="btn-row">
+              <button
+                style="background-color: var(--button-bg, #ff8c1a)"
+                @click="${() => this.superLike(p.id)}"
+              >
+                V_V ${this.getSuperLikes(p.id)}
+              </button>
               <button
                 style="background-color: var(--button-bg, #ff8c1a)"
                 @click="${() => this.like(p.id)}"
