@@ -174,7 +174,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
             <p>${p.author}</p>
             <div class="btn-row">
               <button @click="${() => this.like(p.id)}">
-                Like ${this.getLikes(p.id)}
+                V_V ${this.getLikes(p.id)}
               </button>
               <button @click="${() => this.dislike(p.id)}">
                 Dislike ${this.getDislikes(p.id)}
