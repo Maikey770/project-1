@@ -1,4 +1,4 @@
-// Simple gallery that loads photos from api
+// Simple gallery that loads photos from API
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
@@ -11,6 +11,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     return {
       photos: { type: Array },
       loading: { type: Boolean },
+      darkMode: { type: Boolean }, // light/dark mode toggle
     };
   }
 
@@ -18,6 +19,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     super();
     this.photos = [];
     this.loading = false;
+    this.darkMode = true; // default mode
   }
 
   static get styles() {
@@ -26,22 +28,21 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
       css`
         :host {
           display: block;
-          background: #1e1e1e;
-          color: white;
+          background: var(--bg-color, #1e1e1e);
+          color: var(--text-color, white);
           padding: 20px;
           border-radius: 12px;
           text-align: center;
           max-width: 700px;
           margin: 40px auto;
+          transition: background 0.3s, color 0.3s;
         }
         img {
-         width: 85%;
-        max-width: 500px;
-        border-radius: 10px;
+          width: 100%;
+          border-radius: 10px;
         }
-
         button {
-          background: #ff8c1a;
+          background: var(--accent-color, #ff8c1a);
           color: white;
           border: none;
           border-radius: 8px;
@@ -55,26 +56,29 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         .card {
           margin-bottom: 20px;
         }
-        .actions {
+        .controls {
           display: flex;
-          justify-content: space-around;
-          align-items: center;
-          margin-top: 10px;
-        }
-        .count {
-          margin-left: 8px;
-          color: #ffd699;
+          justify-content: center;
+          gap: 10px;
+          flex-wrap: wrap;
         }
       `,
     ];
   }
 
-  // Fetch data from our API
+  // Fetch data from the API
   async loadGallery() {
     this.loading = true;
-    const res = await fetch("https://project-1-eight-steel.vercel.app/api/gallery");
-    this.photos = await res.json();
-    this.loading = false;
+    try {
+      const res = await fetch("/api/gallery");
+      if (!res.ok) throw new Error("Failed to fetch");
+      this.photos = await res.json();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load gallery. Please try again later.");
+    } finally {
+      this.loading = false;
+    }
   }
 
   // Like a photo and save to localStorage
@@ -85,7 +89,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  // Not like a photo and save to localStorage
+  // Dislike a photo and save to localStorage
   dislike(id) {
     const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
     dislikes[id] = (dislikes[id] || 0) + 1;
@@ -93,36 +97,64 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  // Get the like count
+  // Get like count
   getLikes(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     return likes[id] || 0;
   }
 
-  // Get the dislike count
+  // Get dislike count
   getDislikes(id) {
     const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
     return dislikes[id] || 0;
   }
 
+  // Toggle light/dark mode
+  toggleMode() {
+    this.darkMode = !this.darkMode;
+    if (this.darkMode) {
+      document.documentElement.style.setProperty("--bg-color", "#1e1e1e");
+      document.documentElement.style.setProperty("--text-color", "white");
+      document.documentElement.style.setProperty("--accent-color", "#ff8c1a");
+    } else {
+      document.documentElement.style.setProperty("--bg-color", "#f5f5f5");
+      document.documentElement.style.setProperty("--text-color", "#1e1e1e");
+      document.documentElement.style.setProperty("--accent-color", "#0078d7");
+    }
+  }
+
+  // Copy current page URL to clipboard
+  shareLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      alert("Link copied to clipboard.");
+    });
+  }
+
   render() {
     return html`
       <h2>Fox Gallery</h2>
-      <button @click="${this.loadGallery}">
-        ${this.loading ? "Loading..." : "Load Gallery"}
-      </button>
+      <div class="controls">
+        <button @click="${this.loadGallery}">
+          ${this.loading ? "Loading..." : "Load Gallery"}
+        </button>
+        <button @click="${this.toggleMode}">
+          ${this.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        </button>
+        <button @click="${this.shareLink}">Share</button>
+      </div>
 
       ${this.photos.map(
         (p) => html`
           <div class="card">
             <img src="${p.photo}" alt="${p.author}" />
             <p>${p.author}</p>
-            <div class="actions">
+            <div class="controls">
               <button @click="${() => this.like(p.id)}">
-                Like <span class="count">${this.getLikes(p.id)}</span>
+                Like ${this.getLikes(p.id)}
               </button>
               <button @click="${() => this.dislike(p.id)}">
-                Disike <span class="count">${this.getDislikes(p.id)}</span>
+                Dislike ${this.getDislikes(p.id)}
               </button>
             </div>
           </div>
