@@ -28,9 +28,9 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
       css`
         :host {
           display: block;
-          padding: 20px;
+          padding: 30px;
           border-radius: 12px;
-          max-width: 1100px;
+          max-width: 1300px; /* ✅ Increased from 1100px */
           margin: 0 auto;
           transition: background-color 0.3s, color 0.3s;
         }
@@ -48,20 +48,20 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         h2 {
           text-align: center;
           font-size: 2rem;
-          margin-bottom: 16px;
+          margin-bottom: 20px;
           color: inherit;
         }
 
         .btn-row {
           display: flex;
           justify-content: center;
-          gap: 12px;
-          margin-bottom: 20px;
+          gap: 16px;
+          margin-bottom: 25px;
         }
 
         button {
-          padding: 8px 14px;
-          font-size: 0.9rem;
+          padding: 10px 18px;
+          font-size: 0.95rem;
           cursor: pointer;
           border: none;
           border-radius: 6px;
@@ -76,19 +76,19 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         .gallery {
           display: grid;
-          grid-template-columns: repeat(5, 1fr); /* ✅ Force 5 cards per row */
-          gap: 14px;
+          grid-template-columns: repeat(5, 1fr); /* ✅ Still 5 per row */
+          gap: 18px; /* ✅ Increased spacing between cards */
         }
 
         .card {
-          border-radius: 8px;
+          border-radius: 10px;
           overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
           background: #fff;
           color: #111;
           text-align: center;
-          transition: transform 0.2s;
-          padding-bottom: 10px;
+          transition: transform 0.2s, box-shadow 0.2s;
+          padding: 14px 10px; /* ✅ Slightly more inner space */
         }
 
         :host([darkmode]) .card {
@@ -98,11 +98,14 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         .card:hover {
           transform: scale(1.03);
+          box-shadow: 0 4px 14px rgba(255, 140, 26, 0.25);
         }
 
         img {
           width: 100%;
           display: block;
+          border-radius: 8px;
+          margin-bottom: 10px;
           opacity: 0;
           transition: opacity 0.6s ease;
         }
@@ -127,23 +130,23 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         }
 
         .author img {
-          width: 28px;
-          height: 28px;
+          width: 30px;
+          height: 30px;
           border-radius: 50%;
         }
 
         .interaction {
           display: flex;
           justify-content: center;
-          gap: 8px;
-          margin-top: 8px;
+          gap: 10px;
+          margin-top: 10px;
         }
 
         .interaction button {
           background-color: #ff8c1a;
           border: none;
           border-radius: 6px;
-          padding: 6px 10px;
+          padding: 7px 12px;
           color: white;
           cursor: pointer;
           font-size: 0.8rem;
@@ -152,6 +155,24 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         .interaction button:hover {
           background-color: #e67e00;
+        }
+
+        @media (max-width: 1200px) {
+          .gallery {
+            grid-template-columns: repeat(4, 1fr);
+          }
+        }
+
+        @media (max-width: 900px) {
+          .gallery {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        @media (max-width: 600px) {
+          .gallery {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
       `,
     ];
