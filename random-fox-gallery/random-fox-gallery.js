@@ -1,4 +1,4 @@
-// RandomFoxGallery Web Component with Lazy Loading, Theme Toggle, and Clean Interaction Buttons
+// RandomFoxGallery Web Component (3 columns, no emojis)
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
@@ -28,28 +28,33 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
       css`
         :host {
           display: block;
-          padding: 30px;
-          border-radius: 12px;
-          max-width: 1300px; /* ✅ Increased from 1100px */
+          padding: 0;
+          max-width: 1200px; /* Three columns layout */
           margin: 0 auto;
-          transition: background-color 0.3s, color 0.3s;
         }
 
-        :host([darkmode]) {
-          background-color: #111;
-          color: #f4f4f4;
+        .container {
+          border: 2px solid #ff8c1a;
+          border-radius: 12px;
+          padding: 40px;
+          box-shadow: 0 0 20px rgba(255, 140, 26, 0.4);
+          background-color: var(--container-bg, #1a1a1a);
+          transition: all 0.3s ease;
         }
 
-        :host(:not([darkmode])) {
-          background-color: #fafafa;
-          color: #111;
+        :host([darkmode]) .container {
+          --container-bg: #111;
+        }
+
+        :host(:not([darkmode])) .container {
+          --container-bg: #fafafa;
         }
 
         h2 {
           text-align: center;
           font-size: 2rem;
           margin-bottom: 20px;
-          color: inherit;
+          color: var(--ddd-theme-primary, #ff8c1a);
         }
 
         .btn-row {
@@ -61,7 +66,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         button {
           padding: 10px 18px;
-          font-size: 0.95rem;
+          font-size: 1rem;
           cursor: pointer;
           border: none;
           border-radius: 6px;
@@ -76,8 +81,8 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         .gallery {
           display: grid;
-          grid-template-columns: repeat(5, 1fr); /* ✅ Still 5 per row */
-          gap: 18px; /* ✅ Increased spacing between cards */
+          grid-template-columns: repeat(3, 1fr); /* Three cards per row */
+          gap: 22px;
         }
 
         .card {
@@ -88,7 +93,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           color: #111;
           text-align: center;
           transition: transform 0.2s, box-shadow 0.2s;
-          padding: 14px 10px; /* ✅ Slightly more inner space */
+          padding: 16px 10px;
         }
 
         :host([darkmode]) .card {
@@ -103,7 +108,8 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         img {
           width: 100%;
-          display: block;
+          height: 200px;
+          object-fit: cover;
           border-radius: 8px;
           margin-bottom: 10px;
           opacity: 0;
@@ -130,8 +136,8 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         }
 
         .author img {
-          width: 30px;
-          height: 30px;
+          width: 26px;
+          height: 26px;
           border-radius: 50%;
         }
 
@@ -146,46 +152,26 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           background-color: #ff8c1a;
           border: none;
           border-radius: 6px;
-          padding: 7px 12px;
+          padding: 6px 12px;
           color: white;
           cursor: pointer;
-          font-size: 0.8rem;
+          font-size: 0.85rem;
           font-weight: 500;
         }
 
         .interaction button:hover {
           background-color: #e67e00;
         }
-
-        @media (max-width: 1200px) {
-          .gallery {
-            grid-template-columns: repeat(4, 1fr);
-          }
-        }
-
-        @media (max-width: 900px) {
-          .gallery {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-
-        @media (max-width: 600px) {
-          .gallery {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
       `,
     ];
   }
 
-  // ✅ Fetch gallery data
+  // Fetch photo data from API endpoint
   async loadGallery() {
     this.loading = true;
     try {
       const res = await fetch("/api/gallery");
       this.photos = await res.json();
-      await this.updateComplete;
-      this.setupLazyLoading();
     } catch (err) {
       console.error("Error loading gallery:", err);
     } finally {
@@ -193,29 +179,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     }
   }
 
-  // ✅ Lazy loading setup
-  setupLazyLoading() {
-    const observer = new IntersectionObserver(
-      (entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            if (img.dataset.src) {
-              img.src = img.dataset.src;
-              img.onload = () => img.classList.add("loaded");
-              obs.unobserve(img);
-            }
-          }
-        });
-      },
-      { threshold: 0.2 }
-    );
-
-    const lazyImages = this.renderRoot.querySelectorAll("img.lazy");
-    lazyImages.forEach((img) => observer.observe(img));
-  }
-
-  // ✅ Mode toggle
+  // Toggle between dark and light themes
   toggleMode() {
     this.darkMode = !this.darkMode;
     if (this.darkMode) {
@@ -225,7 +189,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     }
   }
 
-  // ✅ Like / Dislike / Share
+  // Add a like to a photo
   like(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     likes[id] = (likes[id] || 0) + 1;
@@ -233,6 +197,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
+  // Add a dislike to a photo
   dislike(id) {
     const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
     dislikes[id] = (dislikes[id] || 0) + 1;
@@ -240,66 +205,93 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  share(url) {
-    navigator.clipboard.writeText(url).then(() => {
-      alert("Image link copied!");
-    });
-  }
-
+  // Get like count
   getLikes(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     return likes[id] || 0;
   }
 
+  // Get dislike count
   getDislikes(id) {
     const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
     return dislikes[id] || 0;
   }
 
+  // Copy photo link to clipboard
+  share(photoUrl) {
+    navigator.clipboard.writeText(photoUrl).then(() => {
+      alert("Photo link copied to clipboard!");
+    });
+  }
+
+  // Lazy loading using IntersectionObserver
+  firstUpdated() {
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.onload = () => img.classList.add("loaded");
+            obs.unobserve(img);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const lazyImages = this.renderRoot.querySelectorAll("img.lazy");
+    lazyImages.forEach((img) => observer.observe(img));
+  }
+
   render() {
     return html`
-      <h2>Random Fox Gallery</h2>
-      <div class="btn-row">
-        <button @click="${this.loadGallery}">
-          ${this.loading ? "Loading..." : "Load Gallery"}
-        </button>
-        <button @click="${this.toggleMode}">
-          ${this.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        </button>
-      </div>
+      <div class="container">
+        <h2>Random Fox Gallery</h2>
+        <div class="btn-row">
+          <button @click="${this.loadGallery}">
+            ${this.loading ? "Loading..." : "Load Gallery"}
+          </button>
+          <button @click="${this.toggleMode}">
+            ${this.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          </button>
+        </div>
 
-      <div class="gallery">
-        ${this.photos.map(
-          (p) => html`
-            <div class="card">
-              <img
-                data-src="${p.thumbSrc}"
-                alt="${p.name}"
-                class="lazy"
-                loading="lazy"
-              />
-              <div class="author">
-                <img src="${p.author.avatar}" alt="${p.author.name}" />
-                <span>${p.author.channel}</span>
+        <div class="gallery">
+          ${this.photos.map(
+            (p) => html`
+              <div class="card">
+                <img
+                  data-src="${p.thumbSrc}"
+                  alt="${p.name}"
+                  class="lazy"
+                  loading="lazy"
+                />
+                <div class="author">
+                  <img src="${p.author.avatar}" alt="${p.author.name}" />
+                  <span>${p.author.channel}</span>
+                </div>
+                <p>${p.name}</p>
+                <small>Taken on ${p.dateTaken}</small>
+                <div class="interaction">
+                  <button @click="${() => this.like(p.id)}">
+                    Like ${this.getLikes(p.id)}
+                  </button>
+                  <button @click="${() => this.dislike(p.id)}">
+                    Dislike ${this.getDislikes(p.id)}
+                  </button>
+                  <button @click="${() => this.share(p.thumbSrc)}">
+                    Share
+                  </button>
+                </div>
               </div>
-              <p>${p.name}</p>
-              <small>Taken on ${p.dateTaken}</small>
-
-              <div class="interaction">
-                <button @click="${() => this.like(p.id)}">
-                  Like ${this.getLikes(p.id)}
-                </button>
-                <button @click="${() => this.dislike(p.id)}">
-                  Dislike ${this.getDislikes(p.id)}
-                </button>
-                <button @click="${() => this.share(p.thumbSrc)}">Share</button>
-              </div>
-            </div>
-          `
-        )}
+            `
+          )}
+        </div>
       </div>
     `;
   }
 }
 
 customElements.define(RandomFoxGallery.tag, RandomFoxGallery);
+
