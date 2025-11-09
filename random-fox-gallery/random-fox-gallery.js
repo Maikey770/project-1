@@ -1,3 +1,4 @@
+// Simple gallery that loads photos from API
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
@@ -10,7 +11,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     return {
       photos: { type: Array },
       loading: { type: Boolean },
-      theme: { type: String },
+      darkMode: { type: Boolean },
     };
   }
 
@@ -18,7 +19,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     super();
     this.photos = [];
     this.loading = false;
-    this.theme = "dark";
+    this.darkMode = true;
   }
 
   static get styles() {
@@ -27,14 +28,22 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
       css`
         :host {
           display: block;
-          background: var(--bg-color, #121212);
-          color: var(--text-color, #fff);
           padding: 20px;
           border-radius: 12px;
           text-align: center;
           max-width: 700px;
           margin: 40px auto;
-          transition: background 0.4s ease, color 0.4s ease;
+          transition: background-color 0.3s, color 0.3s;
+        }
+
+        :host([dark-mode]) {
+          background-color: #1e1e1e;
+          color: white;
+        }
+
+        :host(:not([dark-mode])) {
+          background-color: #f4f4f4;
+          color: #333;
         }
 
         img {
@@ -42,14 +51,29 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           border-radius: 10px;
         }
 
+        .btn-row {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 10px;
+        }
+
         button {
-          color: white;
           border: none;
-          border-radius: 8px;
+          border-radius: 6px;
           padding: 8px 14px;
           cursor: pointer;
-          margin: 6px;
-          transition: background-color 0.3s ease, color 0.3s ease;
+          font-weight: bold;
+        }
+
+        :host([dark-mode]) button {
+          background: #ff8c1a;
+          color: white;
+        }
+
+        :host(:not([dark-mode])) button {
+          background: #007bff;
+          color: white;
         }
 
         button:hover {
@@ -58,39 +82,34 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         .card {
           margin-bottom: 20px;
-          background: var(--card-bg, #1e1e1e);
-          border-radius: 10px;
-          padding: 10px;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
 
-        .btn-row {
-          display: flex;
-          justify-content: space-around;
-          margin-top: 10px;
-          flex-wrap: wrap;
-        }
-
-        .top-buttons {
-          text-align: center;
+        h2 {
           margin-bottom: 20px;
         }
       `,
     ];
   }
 
-  // Load gallery from API
+  // Fetch data from API
   async loadGallery() {
-    this.loading = true;
     try {
-      const res = await fetch("/api/gallery");
+      this.loading = true;
+      const res = await fetch(
+        "https://project-1-eight-steel.vercel.app/api/gallery"
+      );
       this.photos = await res.json();
     } catch (e) {
-      console.error("Error loading gallery:", e);
+      console.error("Failed to load gallery", e);
+    } finally {
+      this.loading = false;
     }
-    this.loading = false;
   }
 
-  // Like
+  // Like a photo
   like(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     likes[id] = (likes[id] || 0) + 1;
@@ -98,7 +117,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  // Dislike
+  // Dislike a photo
   dislike(id) {
     const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
     dislikes[id] = (dislikes[id] || 0) + 1;
@@ -106,15 +125,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     this.requestUpdate();
   }
 
-  // Super Like
-  superLike(id) {
-    const superLikes = JSON.parse(localStorage.getItem("superLikes") || "{}");
-    superLikes[id] = (superLikes[id] || 0) + 1;
-    localStorage.setItem("superLikes", JSON.stringify(superLikes));
-    this.requestUpdate();
-  }
-
-  // Counts
+  // Get counts
   getLikes(id) {
     const likes = JSON.parse(localStorage.getItem("likes") || "{}");
     return likes[id] || 0;
@@ -125,55 +136,34 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     return dislikes[id] || 0;
   }
 
-  getSuperLikes(id) {
-    const superLikes = JSON.parse(localStorage.getItem("superLikes") || "{}");
-    return superLikes[id] || 0;
-  }
-
-  // Theme toggle
-  toggleTheme() {
-    if (this.theme === "dark") {
-      this.theme = "light";
-      document.documentElement.style.setProperty("--bg-color", "#ffffff");
-      document.documentElement.style.setProperty("--text-color", "#000000");
-      document.documentElement.style.setProperty("--card-bg", "#f8f8f8");
-      document.documentElement.style.setProperty("--button-bg", "#007bff");
-      document.body.style.backgroundColor = "#ffffff";
-      document.querySelector("html").style.backgroundColor = "#ffffff";
-    } else {
-      this.theme = "dark";
-      document.documentElement.style.setProperty("--bg-color", "#121212");
-      document.documentElement.style.setProperty("--text-color", "#ffffff");
-      document.documentElement.style.setProperty("--card-bg", "#1e1e1e");
-      document.documentElement.style.setProperty("--button-bg", "#ff8c1a");
-      document.body.style.backgroundColor = "#121212";
-      document.querySelector("html").style.backgroundColor = "#121212";
-    }
-    this.requestUpdate();
-  }
-
-  // Share a specific image
+  // Share photo link
   sharePhoto(photoUrl) {
-    navigator.clipboard.writeText(photoUrl);
-    alert("Image link copied to clipboard!");
+    navigator.clipboard.writeText(photoUrl).then(() => {
+      alert("Photo link copied to clipboard!");
+    });
+  }
+
+  // Toggle light/dark mode
+  toggleMode() {
+    this.darkMode = !this.darkMode;
+    if (this.darkMode) {
+      this.setAttribute("dark-mode", "");
+      document.body.style.backgroundColor = "#121212";
+    } else {
+      this.removeAttribute("dark-mode");
+      document.body.style.backgroundColor = "#ffffff";
+    }
   }
 
   render() {
     return html`
       <h2>Fox Gallery</h2>
-
-      <div class="top-buttons">
-        <button
-          style="background-color: var(--button-bg, #ff8c1a)"
-          @click="${this.loadGallery}"
-        >
+      <div class="btn-row">
+        <button @click="${this.loadGallery}">
           ${this.loading ? "Loading..." : "Load Gallery"}
         </button>
-        <button
-          style="background-color: var(--button-bg, #ff8c1a)"
-          @click="${this.toggleTheme}"
-        >
-          Switch to ${this.theme === "dark" ? "Light" : "Dark"} Mode
+        <button @click="${this.toggleMode}">
+          ${this.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         </button>
       </div>
 
@@ -183,31 +173,13 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
             <img src="${p.photo}" alt="${p.author}" />
             <p>${p.author}</p>
             <div class="btn-row">
-             <button
-  style="background-color: purple; color: white"
-  @click="${() => this.superLike(p.id)}"
->
-  V_V ${this.getSuperLikes(p.id)}
-</button>
-
-              <button
-                style="background-color: var(--button-bg, #ff8c1a)"
-                @click="${() => this.like(p.id)}"
-              >
+              <button @click="${() => this.like(p.id)}">
                 Like ${this.getLikes(p.id)}
               </button>
-              <button
-                style="background-color: var(--button-bg, #ff8c1a)"
-                @click="${() => this.dislike(p.id)}"
-              >
+              <button @click="${() => this.dislike(p.id)}">
                 Dislike ${this.getDislikes(p.id)}
               </button>
-              <button
-                style="background-color: var(--button-bg, #ff8c1a)"
-                @click="${() => this.sharePhoto(p.photo)}"
-              >
-                Share
-              </button>
+              <button @click="${() => this.sharePhoto(p.photo)}">Share</button>
             </div>
           </div>
         `
