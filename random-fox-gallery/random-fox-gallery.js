@@ -1,4 +1,4 @@
-// RandomFoxGallery Web Component with Lazy Loading, Theme Toggle, and Interaction Buttons
+// RandomFoxGallery Web Component with Lazy Loading, Theme Toggle, and Clean Interaction Buttons
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
@@ -30,7 +30,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           display: block;
           padding: 20px;
           border-radius: 12px;
-          max-width: 900px;
+          max-width: 1100px;
           margin: 0 auto;
           transition: background-color 0.3s, color 0.3s;
         }
@@ -76,8 +76,8 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
         .gallery {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(5, 1fr); /* ✅ Force 5 cards per row */
+          gap: 14px;
         }
 
         .card {
@@ -147,9 +147,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           color: white;
           cursor: pointer;
           font-size: 0.8rem;
-          display: flex;
-          align-items: center;
-          gap: 4px;
+          font-weight: 500;
         }
 
         .interaction button:hover {
@@ -159,7 +157,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     ];
   }
 
-  // ✅ Fetch gallery data from API endpoint
+  // ✅ Fetch gallery data
   async loadGallery() {
     this.loading = true;
     try {
@@ -174,7 +172,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     }
   }
 
-  // ✅ Setup IntersectionObserver for lazy loading
+  // ✅ Lazy loading setup
   setupLazyLoading() {
     const observer = new IntersectionObserver(
       (entries, obs) => {
@@ -191,11 +189,12 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
       },
       { threshold: 0.2 }
     );
+
     const lazyImages = this.renderRoot.querySelectorAll("img.lazy");
     lazyImages.forEach((img) => observer.observe(img));
   }
 
-  // ✅ Dark/Light mode toggle
+  // ✅ Mode toggle
   toggleMode() {
     this.darkMode = !this.darkMode;
     if (this.darkMode) {
@@ -267,12 +266,12 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
 
               <div class="interaction">
                 <button @click="${() => this.like(p.id)}">
-                  👍 Like ${this.getLikes(p.id)}
+                  Like ${this.getLikes(p.id)}
                 </button>
                 <button @click="${() => this.dislike(p.id)}">
-                  👎 Dislike ${this.getDislikes(p.id)}
+                  Dislike ${this.getDislikes(p.id)}
                 </button>
-                <button @click="${() => this.share(p.thumbSrc)}">🔗 Share</button>
+                <button @click="${() => this.share(p.thumbSrc)}">Share</button>
               </div>
             </div>
           `
