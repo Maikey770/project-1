@@ -49,10 +49,7 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           text-align: center;
           font-size: 2rem;
           margin-bottom: 16px;
-          margin-top: 0; /* restore original position */
-          color: inherit; /* restore default text color */
-          letter-spacing: normal;
-          text-shadow: none; /* remove glow */
+          color: inherit;
         }
 
         .btn-row {
@@ -137,12 +134,16 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     ];
   }
 
-  // Fetch gallery data from API endpoint
+  // ✅ Fetch gallery data from API endpoint
   async loadGallery() {
     this.loading = true;
     try {
       const res = await fetch("/api/gallery");
       this.photos = await res.json();
+
+      // 等待渲染完成后再绑定懒加载监听器
+      await this.updateComplete;
+      this.setupLazyLoading();
     } catch (err) {
       console.error("Error loading gallery:", err);
     } finally {
@@ -150,7 +151,29 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     }
   }
 
-  // Switch between dark and light modes
+  // ✅ Setup IntersectionObserver for lazy loading
+  setupLazyLoading() {
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            if (img.dataset.src) {
+              img.src = img.dataset.src;
+              img.onload = () => img.classList.add("loaded");
+              obs.unobserve(img);
+            }
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    const lazyImages = this.renderRoot.querySelectorAll("img.lazy");
+    lazyImages.forEach((img) => observer.observe(img));
+  }
+
+  // ✅ Dark/Light mode toggle
   toggleMode() {
     this.darkMode = !this.darkMode;
     if (this.darkMode) {
@@ -158,27 +181,6 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
     } else {
       this.removeAttribute("darkmode");
     }
-  }
-
-  // Lazy loading images using IntersectionObserver
-  firstUpdated() {
-    const observer = new IntersectionObserver(
-      (entries, obs) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            img.onload = () => img.classList.add("loaded");
-            obs.unobserve(img);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    // Observe all lazy images
-    const lazyImages = this.renderRoot.querySelectorAll("img.lazy");
-    lazyImages.forEach((img) => observer.observe(img));
   }
 
   render() {
@@ -197,7 +199,12 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         ${this.photos.map(
           (p) => html`
             <div class="card">
-              <img data-src="${p.thumbSrc}" alt="${p.name}" class="lazy" />
+              <img
+                data-src="${p.thumbSrc}"
+                alt="${p.name}"
+                class="lazy"
+                loading="lazy"
+              />
               <div class="author">
                 <img src="${p.author.avatar}" alt="${p.author.name}" />
                 <span>${p.author.channel}</span>
