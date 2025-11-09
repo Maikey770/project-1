@@ -1,4 +1,4 @@
-// Simple gallery that loads photos from API
+// RandomFoxGallery Web Component with Lazy Loading and Theme Toggle
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 
@@ -30,66 +30,90 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           display: block;
           padding: 20px;
           border-radius: 12px;
-          text-align: center;
-          max-width: 700px;
-          margin: 40px auto;
+          max-width: 900px;
+          margin: 0 auto;
           transition: background-color 0.3s, color 0.3s;
         }
 
-        :host([dark-mode]) {
-          background-color: #1e1e1e;
-          color: white;
+        :host([darkmode]) {
+          background-color: #111;
+          color: #f4f4f4;
         }
 
-        :host(:not([dark-mode])) {
-          background-color: #f4f4f4;
-          color: #333;
+        :host(:not([darkmode])) {
+          background-color: #fafafa;
+          color: #111;
         }
 
-        img {
-          width: 100%;
-          border-radius: 10px;
+        h2 {
+          text-align: center;
+          font-size: 1.8rem;
+          margin-bottom: 16px;
         }
 
         .btn-row {
           display: flex;
           justify-content: center;
-          gap: 8px;
-          margin-top: 10px;
+          gap: 12px;
+          margin-bottom: 20px;
         }
 
         button {
+          padding: 8px 16px;
+          font-size: 1rem;
+          cursor: pointer;
           border: none;
           border-radius: 6px;
-          padding: 8px 14px;
-          cursor: pointer;
-          font-weight: bold;
-        }
-
-        :host([dark-mode]) button {
-          background: #ff8c1a;
+          background-color: var(--ddd-theme-primary, #0078d7);
           color: white;
-        }
-
-        :host(:not([dark-mode])) button {
-          background: #007bff;
-          color: white;
+          transition: 0.3s;
         }
 
         button:hover {
-          opacity: 0.9;
+          background-color: var(--ddd-theme-primary-hover, #005ea6);
+        }
+
+        .gallery {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 16px;
         }
 
         .card {
-          margin-bottom: 20px;
-          border-radius: 12px;
+          border-radius: 8px;
           overflow: hidden;
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-          padding-bottom: 10px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          background: #fff;
+          color: #111;
+          text-align: center;
+          transition: transform 0.2s;
         }
 
-        h2 {
-          margin-bottom: 20px;
+        :host([darkmode]) .card {
+          background: #222;
+          color: #fafafa;
+        }
+
+        .card:hover {
+          transform: scale(1.03);
+        }
+
+        img {
+          width: 100%;
+          display: block;
+          opacity: 0;
+          transition: opacity 0.6s ease;
+        }
+
+        img.loaded {
+          opacity: 1;
+        }
+
+        small {
+          display: block;
+          margin-bottom: 8px;
+          font-size: 0.85rem;
+          color: gray;
         }
 
         .author {
@@ -97,87 +121,65 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          margin-top: 8px;
-          font-size: 0.9rem;
-          opacity: 0.8;
+          margin-bottom: 12px;
         }
 
         .author img {
-          width: 40px;
-          height: 40px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
         }
       `,
     ];
   }
 
-  // Fetch gallery data from API
+  // Fetch gallery data from API endpoint
   async loadGallery() {
+    this.loading = true;
     try {
-      this.loading = true;
-      const res = await fetch("https://project-1-eight-steel.vercel.app/api/gallery");
-      const data = await res.json();
-      console.log("Fetched data:", data);
-      this.photos = data;
-    } catch (e) {
-      console.error("Failed to load gallery", e);
+      const res = await fetch("/api/gallery");
+      this.photos = await res.json();
+    } catch (err) {
+      console.error("Error loading gallery:", err);
     } finally {
       this.loading = false;
     }
   }
 
-  // Like a photo and store count in localStorage
-  like(id) {
-    const likes = JSON.parse(localStorage.getItem("likes") || "{}");
-    likes[id] = (likes[id] || 0) + 1;
-    localStorage.setItem("likes", JSON.stringify(likes));
-    this.requestUpdate();
-  }
-
-  // Dislike a photo and store count in localStorage
-  dislike(id) {
-    const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
-    dislikes[id] = (dislikes[id] || 0) + 1;
-    localStorage.setItem("dislikes", JSON.stringify(dislikes));
-    this.requestUpdate();
-  }
-
-  // Get like count for a specific photo
-  getLikes(id) {
-    const likes = JSON.parse(localStorage.getItem("likes") || "{}");
-    return likes[id] || 0;
-  }
-
-  // Get dislike count for a specific photo
-  getDislikes(id) {
-    const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
-    return dislikes[id] || 0;
-  }
-
-  // Copy photo link to clipboard
-  sharePhoto(photoUrl) {
-    navigator.clipboard.writeText(photoUrl).then(() => {
-      alert("Photo link copied to clipboard!");
-    });
-  }
-
-  // Toggle between light and dark mode
+  // Switch between dark and light modes
   toggleMode() {
     this.darkMode = !this.darkMode;
     if (this.darkMode) {
-      this.setAttribute("dark-mode", "");
-      document.body.style.backgroundColor = "#121212";
+      this.setAttribute("darkmode", "");
     } else {
-      this.removeAttribute("dark-mode");
-      document.body.style.backgroundColor = "#ffffff";
+      this.removeAttribute("darkmode");
     }
   }
 
-  // Render the gallery layout
+  // Lazy loading images using IntersectionObserver
+  firstUpdated() {
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.onload = () => img.classList.add("loaded");
+            obs.unobserve(img);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    // Observe all lazy images
+    const lazyImages = this.renderRoot.querySelectorAll("img.lazy");
+    lazyImages.forEach((img) => observer.observe(img));
+  }
+
   render() {
     return html`
-      <h2>Fox Gallery</h2>
-
+      <h2>Random Fox Gallery</h2>
       <div class="btn-row">
         <button @click="${this.loadGallery}">
           ${this.loading ? "Loading..." : "Load Gallery"}
@@ -187,31 +189,21 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
         </button>
       </div>
 
-      ${this.photos.map(
-        (p) => html`
-          <div class="card">
-            <img src="${p.thumbSrc}" alt="Fox photo by ${p.name}" />
-            <p><strong>${p.name}</strong> — ${p.dateTaken}</p>
-
-            <div class="author">
-              <img src="${p.author.avatar}" alt="${p.author.name}" />
-              <span>${p.author.name}</span>
+      <div class="gallery">
+        ${this.photos.map(
+          (p) => html`
+            <div class="card">
+              <img data-src="${p.thumbSrc}" alt="${p.name}" class="lazy" />
+              <div class="author">
+                <img src="${p.author.avatar}" alt="${p.author.name}" />
+                <span>@${p.author.channel}</span>
+              </div>
+              <p>${p.name}</p>
+              <small>Taken on ${p.dateTaken}</small>
             </div>
-
-            <div class="btn-row">
-              <button @click="${() => this.like(p.id)}">
-                Like ${this.getLikes(p.id)}
-              </button>
-              <button @click="${() => this.dislike(p.id)}">
-                Dislike ${this.getDislikes(p.id)}
-              </button>
-              <button @click="${() => this.sharePhoto(p.fullSrc)}">
-                Share
-              </button>
-            </div>
-          </div>
-        `
-      )}
+          `
+        )}
+      </div>
     `;
   }
 }
