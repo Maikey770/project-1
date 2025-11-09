@@ -32,74 +32,157 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
           border-radius: 12px;
           text-align: center;
           max-width: 700px;
-          margin: 0 auto;
-          background-color: var(--ddd-theme-default-sky, #222);
-          color: var(--ddd-theme-default-skytext, #fff);
-          box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+          margin: 40px auto;
+          transition: background-color 0.3s, color 0.3s;
+        }
+
+        :host([dark-mode]) {
+          background-color: #1e1e1e;
+          color: white;
+        }
+
+        :host(:not([dark-mode])) {
+          background-color: #f4f4f4;
+          color: #333;
+        }
+
+        img {
+          width: 100%;
+          border-radius: 10px;
+        }
+
+        .btn-row {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 10px;
         }
 
         button {
-          background-color: #ff8c1a;
-          color: white;
           border: none;
           border-radius: 6px;
-          padding: 8px 16px;
+          padding: 8px 14px;
           cursor: pointer;
-          margin-top: 20px;
+          font-weight: bold;
+        }
+
+        :host([dark-mode]) button {
+          background: #ff8c1a;
+          color: white;
+        }
+
+        :host(:not([dark-mode])) button {
+          background: #007bff;
+          color: white;
         }
 
         button:hover {
           opacity: 0.9;
         }
 
-        img {
-          width: 100%;
-          max-height: 400px;
-          object-fit: cover;
-          border-radius: 10px;
-          box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
-          margin-bottom: 15px;
+        .card {
+          margin-bottom: 20px;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
 
-        .loading {
-          font-size: 1.2rem;
-          color: #ff8c1a;
-          margin-top: 10px;
+        h2 {
+          margin-bottom: 20px;
         }
       `,
     ];
   }
 
-  // 初次加载时自动拉取一张随机狐狸图片
-  firstUpdated() {
-    this.loadRandomFox();
-  }
-
-  async loadRandomFox() {
-    this.loading = true;
+  // Fetch data from API
+  async loadGallery() {
     try {
-      // 调用随机狐狸 API
-      const res = await fetch("https://randomfox.ca/floof/");
-      const data = await res.json();
-      this.photos = [data.image];
-    } catch (err) {
-      console.error("Error loading fox image:", err);
+      this.loading = true;
+      const res = await fetch("https://project-1-eight-steel.vercel.app/api/gallery");
+      this.photos = await res.json();
+    } catch (e) {
+      console.error("Failed to load gallery", e);
     } finally {
       this.loading = false;
     }
   }
 
+  // Like a photo
+  like(id) {
+    const likes = JSON.parse(localStorage.getItem("likes") || "{}");
+    likes[id] = (likes[id] || 0) + 1;
+    localStorage.setItem("likes", JSON.stringify(likes));
+    this.requestUpdate();
+  }
+
+  // Dislike a photo
+  dislike(id) {
+    const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
+    dislikes[id] = (dislikes[id] || 0) + 1;
+    localStorage.setItem("dislikes", JSON.stringify(dislikes));
+    this.requestUpdate();
+  }
+
+  // Get counts
+  getLikes(id) {
+    const likes = JSON.parse(localStorage.getItem("likes") || "{}");
+    return likes[id] || 0;
+  }
+
+  getDislikes(id) {
+    const dislikes = JSON.parse(localStorage.getItem("dislikes") || "{}");
+    return dislikes[id] || 0;
+  }
+
+  // Share photo link
+  sharePhoto(photoUrl) {
+    navigator.clipboard.writeText(photoUrl).then(() => {
+      alert("Photo link copied to clipboard!");
+    });
+  }
+
+  // Toggle light/dark mode
+  toggleMode() {
+    this.darkMode = !this.darkMode;
+    if (this.darkMode) {
+      this.setAttribute("dark-mode", "");
+      document.body.style.backgroundColor = "#121212";
+    } else {
+      this.removeAttribute("dark-mode");
+      document.body.style.backgroundColor = "#ffffff";
+    }
+  }
+
   render() {
     return html`
-      <h2>Random Fox Gallery 🦊</h2>
-      ${this.loading
-        ? html`<div class="loading">Loading...</div>`
-        : html`
-            ${this.photos.map(
-              (src) => html`<img src=${src} alt="Random Fox" />`
-            )}
-            <button @click=${this.loadRandomFox}>Load Another Fox</button>
-          `}
+      <h2>Fox Gallery</h2>
+
+      <div class="btn-row">
+        <button @click="${this.loadGallery}">
+          ${this.loading ? "Loading..." : "Load Gallery"}
+        </button>
+        <button @click="${this.toggleMode}">
+          ${this.darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        </button>
+      </div>
+
+      ${this.photos.map(
+        (p) => html`
+          <div class="card">
+            <img src="${p.photo}" alt="${p.author}" />
+            <p>${p.author}</p>
+            <div class="btn-row">
+              <button @click="${() => this.like(p.id)}">
+                👍 Like ${this.getLikes(p.id)}
+              </button>
+              <button @click="${() => this.dislike(p.id)}">
+                👎 Dislike ${this.getDislikes(p.id)}
+              </button>
+              <button @click="${() => this.sharePhoto(p.photo)}">🔗 Share</button>
+            </div>
+          </div>
+        `
+      )}
     `;
   }
 }
