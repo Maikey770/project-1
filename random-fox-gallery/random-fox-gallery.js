@@ -183,12 +183,13 @@ export class RandomFoxGallery extends DDDSuper(LitElement) {
             <img src="${p.photo}" alt="${p.author}" />
             <p>${p.author}</p>
             <div class="btn-row">
-              <button
-                style="background-color: purple"
-                @click="${() => this.superLike(p.id)}"
-              >
-                V_V ${this.getSuperLikes(p.id)}
-              </button>
+             <button
+  style="background-color: purple; color: white"
+  @click="${() => this.superLike(p.id)}"
+>
+  V_V ${this.getSuperLikes(p.id)}
+</button>
+
               <button
                 style="background-color: var(--button-bg, #ff8c1a)"
                 @click="${() => this.like(p.id)}"
